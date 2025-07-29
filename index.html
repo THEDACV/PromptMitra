@@ -1,0 +1,3078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PromptMitra</title>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --accent-color: #fd79a8;
+            --dark-color: #2d3436;
+            --light-color: #f5f6fa;
+            --success-color: #00b894;
+            --warning-color: #fdcb6e;
+            --danger-color: #d63031;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section, .output-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-title i {
+            font-size: 1.2rem;
+        }
+
+        .prompt-input {
+            width: 100%;
+            height: 150px;
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            resize: none;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .prompt-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        .generate-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .generate-btn:hover {
+            background-color: #5a4bd1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 92, 231, 0.3);
+        }
+
+        .settings {
+            margin-bottom: 1rem;
+        }
+
+        .setting-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .setting-option label {
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+
+        .preview-container {
+            border: 2px dashed #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            min-height: 300px;
+            margin-bottom: 1rem;
+            background-color: #f9f9f9;
+            overflow: auto;
+        }
+
+        .code-tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 1rem;
+        }
+
+        .code-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .code-tab.active {
+            border-bottom: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .code-container {
+            position: relative;
+        }
+
+        .code-content {
+            background-color: #282c34;
+            color: #abb2bf;
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: auto;
+            max-height: 300px;
+            position: relative;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(108, 92, 231, 0.2);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Generated UI styles */
+        .generated-content {
+            animation: fadeIn 0.5s ease-out;
+            width: 100%;
+        }
+
+        /* E-commerce Product Card */
+        .product-card {
+            width: 300px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            background: white;
+            margin: 0 auto;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--danger-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            background: #f5f6fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .product-image img {
+            max-width: 80%;
+            max-height: 80%;
+        }
+
+        .product-details {
+            padding: 1.5rem;
+        }
+
+        .product-title {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .stars {
+            color: #fdcb6e;
+            margin-right: 0.5rem;
+        }
+
+        .price-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .current-price {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--success-color);
+        }
+
+        .original-price {
+            text-decoration: line-through;
+            color: #999;
+            margin-left: 0.5rem;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            flex: 1;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background: #5a4bd1;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid #ddd;
+            padding: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        /* Multi-step Form */
+        .multi-step-form {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 2rem;
+            counter-reset: step;
+        }
+
+        .progress-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #eee;
+            z-index: 1;
+        }
+
+        .progress-step {
+            position: relative;
+            z-index: 2;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-weight: bold;
+        }
+
+        .progress-step.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .progress-step.completed {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        /* Dashboard Widget */
+        .dashboard-widget {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .widget-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .time-selector {
+            padding: 0.5rem;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .metrics-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        .chart-container {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80%;
+            background: linear-gradient(to top, var(--primary-color), var(--secondary-color));
+            clip-path: polygon(0% 100%, 10% 80%, 20% 85%, 30% 70%, 40% 90%, 50% 65%, 60% 75%, 70% 60%, 80% 70%, 90% 55%, 100% 65%);
+        }
+
+        /* Social Media Post */
+        .social-post {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            padding: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .post-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            margin-right: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .post-user {
+            flex: 1;
+        }
+
+        .post-name {
+            font-weight: 600;
+            margin-bottom: 0.1rem;
+        }
+
+        .post-username {
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        .post-time {
+            color: #999;
+            font-size: 0.875rem;
+        }
+
+        .post-content {
+            margin-bottom: 1rem;
+        }
+
+        .post-image {
+            width: 100%;
+            height: 200px;
+            background: #f5f6fa;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #eee;
+            padding-top: 0.75rem;
+        }
+
+        .post-action {
+            display: flex;
+            align-items: center;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .post-action:hover {
+            color: var(--primary-color);
+        }
+
+        .post-action svg {
+            margin-right: 0.5rem;
+        }
+
+        /* Pricing Table */
+        .pricing-table {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .pricing-plan {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .pricing-plan.recommended {
+            border: 2px solid var(--primary-color);
+            position: relative;
+            transform: translateY(-10px);
+        }
+
+        .recommended-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .plan-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .plan-price {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .plan-feature {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .plan-feature:last-child {
+            border-bottom: none;
+        }
+
+        .plan-button {
+            display: inline-block;
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 6px;
+            background: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .plan-button:hover {
+            background: #5a4bd1;
+            transform: translateY(-2px);
+        }
+
+        /* Toggle Switch */
+        .toggle-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+            gap: 1rem;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(30px);
+        }
+
+        /* Animation for generated content */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 0.5s ease;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .pricing-table {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .input-section, .output-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>PromptMitra</h1>
+            <p class="subtitle">Transform your ideas into beautiful UI components instantly</p>
+        </header>
+
+        <div class="main-content">
+            <div class="input-section">
+                <h2 class="section-title">
+                    <span>Your Prompt</span>
+                </h2>
+                <textarea class="prompt-input" id="prompt-input" placeholder="Describe the UI component you want to generate. Be as specific as possible. Example: 'Create a modern e-commerce product card with 20% off badge, product image, title, star ratings, price comparison, and add to cart button in teal and coral colors.'"></textarea>
+                
+                <div class="settings">
+                    <h3>Options</h3>
+                    <div class="setting-option">
+                        <input type="checkbox" id="include-css" checked>
+                        <label for="include-css">Include CSS</label>
+                    </div>
+                    <div class="setting-option">
+                        <input type="checkbox" id="include-js" checked>
+                        <label for="include-js">Include JavaScript</label>
+                    </div>
+                    <div class="setting-option">
+                        <input type="checkbox" id="responsive" checked>
+                        <label for="responsive">Make responsive</label>
+                    </div>
+                </div>
+
+                <button class="generate-btn" id="generate-btn">
+                    <span>Generate UI</span>
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Generating your UI component...</p>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2 class="section-title">
+                    <span>Output Preview</span>
+                </h2>
+                <div class="preview-container" id="preview-container">
+                    <p style="text-align: center; color: #999;">Your generated UI will appear here</p>
+                </div>
+
+                <h2 class="section-title">
+                    <span>Generated Code</span>
+                </h2>
+                <div class="code-tabs">
+                    <div class="code-tab active" data-tab="html">HTML</div>
+                    <div class="code-tab" data-tab="css">CSS</div>
+                    <div class="code-tab" data-tab="js">JavaScript</div>
+                </div>
+                <div class="code-container">
+                    <div class="code-content" id="html-code">
+                        <button class="copy-btn" data-target="html-code">Copy</button>
+                        <pre><code>&lt;!-- HTML code will appear here --&gt;</code></pre>
+                    </div>
+                    <div class="code-content" id="css-code" style="display: none;">
+                        <button class="copy-btn" data-target="css-code">Copy</button>
+                        <pre><code>/* CSS code will appear here */</code></pre>
+                    </div>
+                    <div class="code-content" id="js-code" style="display: none;">
+                        <button class="copy-btn" data-target="js-code">Copy</button>
+                        <pre><code>// JavaScript code will appear here</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generate-btn');
+            const promptInput = document.getElementById('prompt-input');
+            const previewContainer = document.getElementById('preview-container');
+            const htmlCode = document.getElementById('html-code');
+            const cssCode = document.getElementById('css-code');
+            const jsCode = document.getElementById('js-code');
+            const codeTabs = document.querySelectorAll('.code-tab');
+            const loading = document.getElementById('loading');
+            const copyBtns = document.querySelectorAll('.copy-btn');
+            const includeCss = document.getElementById('include-css');
+            const includeJs = document.getElementById('include-js');
+            const responsive = document.getElementById('responsive');
+
+            // Tab switching
+            codeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    codeTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all code content
+                    document.querySelectorAll('.code-content').forEach(content => {
+                        content.style.display = 'none';
+                    });
+                    
+                    // Show the selected code content
+                    const tabName = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabName}-code`).style.display = 'block';
+                });
+            });
+
+            // Copy button functionality
+            copyBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const target = btn.getAttribute('data-target');
+                    const codeElement = document.getElementById(target).querySelector('code');
+                    const text = codeElement.innerText;
+                    
+                    navigator.clipboard.writeText(text).then(() => {
+                        btn.innerText = 'Copied!';
+                        setTimeout(() => {
+                            btn.innerText = 'Copy';
+                        }, 2000);
+                    });
+                });
+            });
+
+            // Generate UI based on prompt
+            generateBtn.addEventListener('click', generateUI);
+
+            // Also generate on Enter key (with Shift)
+            promptInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && e.shiftKey) {
+                    e.preventDefault();
+                    generateUI();
+                }
+            });
+
+            function generateUI() {
+                const prompt = promptInput.value.trim();
+                
+                if (!prompt) {
+                    alert('Please enter a prompt describing the UI you want to generate.');
+                    return;
+                }
+                
+                // Show loading state
+                loading.style.display = 'block';
+                generateBtn.disabled = true;
+                
+                // Simulate processing delay (in a real app, this would be an API call)
+                setTimeout(() => {
+                    processPrompt(prompt);
+                    loading.style.display = 'none';
+                    generateBtn.disabled = false;
+                }, 1000);
+            }
+
+            function processPrompt(prompt) {
+                const promptLower = prompt.toLowerCase();
+                
+                // Clear previous content
+                previewContainer.innerHTML = '';
+                
+                // Enhanced prompt analysis
+                if (containsAll(promptLower, ['e-commerce', 'product card']) || 
+                    containsAny(promptLower, ['20% off', 'discount', 'shopping cart'])) {
+                    generateProductCard(prompt);
+                } 
+                else if (containsAll(promptLower, ['multi-step', 'registration']) || 
+                        containsAny(promptLower, ['progress indicator', 'step by step'])) {
+                    generateMultiStepForm(prompt);
+                }
+                else if (containsAny(promptLower, ['dashboard', 'analytics', 'metrics'])) {
+                    generateDashboardWidget(prompt);
+                }
+                else if (containsAny(promptLower, ['social media', 'twitter', 'post'])) {
+                    generateSocialPost(prompt);
+                }
+                else if (containsAny(promptLower, ['pricing', 'subscription', 'plan'])) {
+                    generatePricingTable(prompt);
+                }
+                else if (containsAny(promptLower, ['kanban', 'trello', 'task board'])) {
+                    generateKanbanBoard(prompt);
+                }
+                else if (containsAny(promptLower, ['weather', 'forecast'])) {
+                    generateWeatherWidget(prompt);
+                }
+                else if (containsAny(promptLower, ['chat', 'messaging', 'conversation'])) {
+                    generateChatInterface(prompt);
+                }
+                else if (containsAny(promptLower, ['music player', 'spotify'])) {
+                    generateMusicPlayer(prompt);
+                }
+                else if (containsAny(promptLower, ['3d', 'flip', 'card effect'])) {
+                    generate3DFlipCard(prompt);
+                }
+                else if (promptLower.includes('form') || promptLower.includes('login') || promptLower.includes('register')) {
+                    generateForm(prompt);
+                }
+                else {
+                    // Default to enhanced card if we don't recognize the prompt
+                    generateEnhancedCard(prompt);
+                }
+            }
+
+            // Helper functions for prompt analysis
+            function containsAll(str, terms) {
+                return terms.every(term => str.includes(term));
+            }
+
+            function containsAny(str, terms) {
+                return terms.some(term => str.includes(term));
+            }
+
+            // Enhanced generation functions
+            function generateProductCard(prompt) {
+                // Extract product details from prompt
+                const title = extractFromPrompt(prompt, ['product title', 'product name']) || 'Premium Product';
+                const discount = extractPercentage(prompt) || '20%';
+                const rating = extractRating(prompt) || 4.5;
+                const price = extractPrice(prompt) || { current: 49.99, original: 59.99 };
+                const colors = extractColors(prompt) || { primary: '#00b894', secondary: '#fd79a8' };
+                
+                // Create product card HTML
+                const productHTML = `
+                <div class="generated-content product-card" style="--primary-color: ${colors.primary}; --success-color: ${colors.primary}">
+                    <div class="product-image">
+                        <div class="product-badge">${discount} OFF</div>
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="#ccc">
+                            <path d="M12 2L1 12h3v9h16v-9h3L12 2zm0 4.5l5.5 5.5H14v5h-4v-5H6.5L12 6.5z"/>
+                        </svg>
+                    </div>
+                    <div class="product-details">
+                        <h3 class="product-title">${title}</h3>
+                        <div class="product-rating">
+                            <div class="stars">${generateStars(rating)}</div>
+                            <span>${rating}/5</span>
+                        </div>
+                        <div class="price-container">
+                            <span class="current-price">$${price.current}</span>
+                            <span class="original-price">$${price.original}</span>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn-primary">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                </svg>
+                                Add to Cart
+                            </button>
+                            <button class="btn-secondary">Quick View</button>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                // Create corresponding CSS
+                const productCSS = `
+                /* Product Card Styles */
+                .product-card {
+                    width: 300px;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
+                    background: white;
+                    margin: 0 auto;
+                }
+
+                .product-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+                }
+
+                .product-badge {
+                    position: absolute;
+                    top: 10px;
+                    right: 10px;
+                    background: var(--danger-color);
+                    color: white;
+                    padding: 0.25rem 0.5rem;
+                    border-radius: 4px;
+                    font-size: 0.8rem;
+                    font-weight: bold;
+                }
+
+                .product-image {
+                    width: 100%;
+                    height: 200px;
+                    background: #f5f6fa;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    position: relative;
+                }
+
+                .product-details {
+                    padding: 1.5rem;
+                }
+
+                .product-title {
+                    font-size: 1.2rem;
+                    margin-bottom: 0.5rem;
+                }
+
+                .product-rating {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 0.75rem;
+                }
+
+                .stars {
+                    color: #fdcb6e;
+                    margin-right: 0.5rem;
+                }
+
+                .price-container {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 1rem;
+                }
+
+                .current-price {
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    color: var(--success-color);
+                }
+
+                .original-price {
+                    text-decoration: line-through;
+                    color: #999;
+                    margin-left: 0.5rem;
+                }
+
+                .product-actions {
+                    display: flex;
+                    gap: 0.5rem;
+                }
+
+                .btn-primary {
+                    flex: 1;
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 0.5rem;
+                }
+
+                .btn-primary:hover {
+                    background: ${darkenColor(colors.primary, 10)};
+                }
+
+                .btn-secondary {
+                    background: transparent;
+                    border: 1px solid #ddd;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .btn-secondary:hover {
+                    border-color: var(--primary-color);
+                    color: var(--primary-color);
+                }
+                `;
+                
+                // Create product JS
+                const productJS = `
+                // Add to cart functionality
+                document.querySelector('.btn-primary').addEventListener('click', function() {
+                    this.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/></svg> Added to Cart';
+                    setTimeout(() => {
+                        this.innerHTML = '<svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M0 1.5A.5.5 0 0 1 .5 1H2a.5.5 0 0 1 .485.379L2.89 3H14.5a.5.5 0 0 1 .491.592l-1.5 8A.5.5 0 0 1 13 12H4a.5.5 0 0 1-.491-.408L2.01 3.607 1.61 2H.5a.5.5 0 0 1-.5-.5zM5 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm-7 1a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm7 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg> Add to Cart';
+                    }, 2000);
+                });
+
+                // Quick view functionality
+                document.querySelector('.btn-secondary').addEventListener('click', function() {
+                    alert('Opening quick view for "${title}"');
+                });
+                `;
+                
+                updateCodeDisplay(productHTML, productCSS, productJS);
+            }
+
+            function generateMultiStepForm(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const darkMode = prompt.toLowerCase().includes('dark mode');
+                
+                const formHTML = `
+                <div class="generated-content multi-step-form" style="${darkMode ? 'background: #2d3436; color: white;' : ''} --primary-color: ${colors.primary}">
+                    <div class="progress-indicator">
+                        <div class="progress-step active">1</div>
+                        <div class="progress-step">2</div>
+                        <div class="progress-step">3</div>
+                    </div>
+                    
+                    <div class="form-steps">
+                        <div class="form-step active">
+                            <h3>Personal Information</h3>
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control">
+                            </div>
+                        </div>
+                        
+                        <div class="form-step">
+                            <h3>Account Details</h3>
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" placeholder="john@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" placeholder="••••••••">
+                                <div class="password-strength" style="margin-top: 0.5rem; height: 4px; background: #eee; width: 100%;">
+                                    <div style="width: 60%; height: 100%; background: var(--warning-color);"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-step">
+                            <h3>Preferences</h3>
+                            <div class="form-group">
+                                <label class="form-label">Profile Picture</label>
+                                <input type="file" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Newsletter</label>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <label class="switch">
+                                        <input type="checkbox" checked>
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Receive monthly newsletter</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-navigation">
+                        <button class="btn-secondary" id="prev-btn" disabled>Back</button>
+                        <button class="btn-primary" id="next-btn">Next</button>
+                    </div>
+                </div>
+                `;
+                
+                const formCSS = `
+                /* Multi-step Form Styles */
+                .multi-step-form {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    padding: 2rem;
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
+
+                .progress-indicator {
+                    display: flex;
+                    justify-content: space-between;
+                    position: relative;
+                    margin-bottom: 2rem;
+                    counter-reset: step;
+                }
+
+                .progress-indicator::before {
+                    content: '';
+                    position: absolute;
+                    top: 50%;
+                    left: 0;
+                    right: 0;
+                    height: 2px;
+                    background: #eee;
+                    z-index: 1;
+                }
+
+                .progress-step {
+                    position: relative;
+                    z-index: 2;
+                    width: 30px;
+                    height: 30px;
+                    border-radius: 50%;
+                    background: #eee;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: #999;
+                    font-weight: bold;
+                }
+
+                .progress-step.active {
+                    background: var(--primary-color);
+                    color: white;
+                }
+
+                .progress-step.completed {
+                    background: var(--success-color);
+                    color: white;
+                }
+
+                .form-step {
+                    display: none;
+                }
+
+                .form-step.active {
+                    display: block;
+                }
+
+                .form-navigation {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-top: 2rem;
+                }
+
+                .switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 50px;
+                    height: 24px;
+                }
+
+                .switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #ccc;
+                    transition: .4s;
+                }
+
+                .slider.round {
+                    border-radius: 24px;
+                }
+
+                .slider.round:before {
+                    border-radius: 50%;
+                }
+
+                input:checked + .slider {
+                    background-color: var(--primary-color);
+                }
+
+                input:focus + .slider {
+                    box-shadow: 0 0 1px var(--primary-color);
+                }
+
+                .slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 16px;
+                    width: 16px;
+                    left: 4px;
+                    bottom: 4px;
+                    background-color: white;
+                    transition: .4s;
+                }
+
+                input:checked + .slider:before {
+                    transform: translateX(26px);
+                }
+                `;
+                
+                const formJS = `
+                // Multi-step form navigation
+                const steps = document.querySelectorAll('.form-step');
+                const stepIndicators = document.querySelectorAll('.progress-step');
+                const prevBtn = document.getElementById('prev-btn');
+                const nextBtn = document.getElementById('next-btn');
+                let currentStep = 0;
+
+                function showStep(step) {
+                    steps.forEach((s, i) => {
+                        s.classList.toggle('active', i === step);
+                    });
+                    
+                    stepIndicators.forEach((indicator, i) => {
+                        indicator.classList.remove('active', 'completed');
+                        if (i < step) {
+                            indicator.classList.add('completed');
+                        } else if (i === step) {
+                            indicator.classList.add('active');
+                        }
+                    });
+                    
+                    prevBtn.disabled = step === 0;
+                    nextBtn.textContent = step === steps.length - 1 ? 'Submit' : 'Next';
+                }
+
+                nextBtn.addEventListener('click', () => {
+                    if (currentStep < steps.length - 1) {
+                        currentStep++;
+                        showStep(currentStep);
+                    } else {
+                        alert('Form submitted successfully!');
+                    }
+                });
+
+                prevBtn.addEventListener('click', () => {
+                    if (currentStep > 0) {
+                        currentStep--;
+                        showStep(currentStep);
+                    }
+                });
+                `;
+                
+                updateCodeDisplay(formHTML, formCSS, formJS);
+            }
+
+            function generateDashboardWidget(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const darkMode = prompt.toLowerCase().includes('dark mode');
+                const comparison = extractComparison(prompt) || '+12.5%';
+                
+                const widgetHTML = `
+                <div class="generated-content dashboard-widget" style="${darkMode ? 'background: #2d3436; color: white;' : ''} --primary-color: ${colors.primary}">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Monthly Sales Analytics</h3>
+                        <select class="time-selector">
+                            <option>Last 7 days</option>
+                            <option selected>Last 30 days</option>
+                            <option>Last 90 days</option>
+                        </select>
+                    </div>
+                    
+                    <div class="metrics-container">
+                        <div class="metric-card">
+                            <div class="metric-value">$12,459</div>
+                            <div class="metric-label">Revenue</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">1,243</div>
+                            <div class="metric-label">Orders</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-value">${comparison}</div>
+                            <div class="metric-label">Growth</div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <div class="chart-line"></div>
+                    </div>
+                </div>
+                `;
+                
+                const widgetCSS = `
+                /* Dashboard Widget Styles */
+                .dashboard-widget {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    padding: 1.5rem;
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
+
+                .widget-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1.5rem;
+                }
+
+                .widget-title {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                }
+
+                .time-selector {
+                    padding: 0.5rem;
+                    border-radius: 6px;
+                    border: 1px solid #ddd;
+                }
+
+                .metrics-container {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 1rem;
+                    margin-bottom: 1.5rem;
+                }
+
+                .metric-card {
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 1rem;
+                    text-align: center;
+                }
+
+                .metric-value {
+                    font-size: 1.5rem;
+                    font-weight: bold;
+                    margin-bottom: 0.25rem;
+                }
+
+                .metric-label {
+                    color: #666;
+                    font-size: 0.875rem;
+                }
+
+                .chart-container {
+                    height: 200px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    position: relative;
+                    overflow: hidden;
+                }
+
+                .chart-line {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 80%;
+                    background: linear-gradient(to top, var(--primary-color), var(--secondary-color));
+                    clip-path: polygon(0% 100%, 10% 80%, 20% 85%, 30% 70%, 40% 90%, 50% 65%, 60% 75%, 70% 60%, 80% 70%, 90% 55%, 100% 65%);
+                }
+                `;
+                
+                const widgetJS = `
+                // Time selector functionality
+                document.querySelector('.time-selector').addEventListener('change', function() {
+                    alert('Time period changed to: ' + this.value);
+                    // In a real app, this would fetch new data for the selected period
+                });
+                `;
+                
+                updateCodeDisplay(widgetHTML, widgetCSS, widgetJS);
+            }
+
+            function generateSocialPost(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const username = extractFromPrompt(prompt, ['username']) || 'johndoe';
+                const name = extractFromPrompt(prompt, ['name']) || 'John Doe';
+                const time = extractFromPrompt(prompt, ['time', 'timestamp']) || '2h ago';
+                const content = extractFromPrompt(prompt, ['content', 'text', 'post text']) || 'Just finished this amazing project!';
+                
+                const postHTML = `
+                <div class="generated-content social-post" style="--primary-color: ${colors.primary}">
+                    <div class="post-header">
+                        <div class="post-avatar">${name.charAt(0)}</div>
+                        <div class="post-user">
+                            <div class="post-name">${name}</div>
+                            <div class="post-username">@${username}</div>
+                        </div>
+                        <div class="post-time">${time}</div>
+                    </div>
+                    
+                    <div class="post-content">
+                        ${content}
+                    </div>
+                    
+                    <div class="post-image">
+                        <svg width="80" height="80" viewBox="0 0 24 24" fill="#ccc">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7l-3 3.72L9 13l-3 4h12l-4-5z"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="post-actions">
+                        <div class="post-action">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                            </svg>
+                            <span>1.2K</span>
+                        </div>
+                        <div class="post-action">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M14 1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-2.5a2 2 0 0 0-1.6.8L8 14.333 6.1 11.8a2 2 0 0 0-1.6-.8H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2.5a1 1 0 0 1 .8.4l1.9 2.533a1 1 0 0 0 1.6 0l1.9-2.533a1 1 0 0 1 .8-.4H14a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                            </svg>
+                            <span>243</span>
+                        </div>
+                        <div class="post-action">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M3.5 3.5a.5.5 0 0 0-1 0v8.793l-1.146-1.147a.5.5 0 0 0-.708.708l2 1.999.007.007a.497.497 0 0 0 .7-.006l2-2a.5.5 0 0 0-.707-.708L3.5 12.293V3.5zm4 .5a.5.5 0 0 1 0-1h1a.5.5 0 0 1 0 1h-1zm0 3a.5.5 0 0 1 0-1h3a.5.5 0 0 1 0 1h-3zm0 3a.5.5 0 0 1 0-1h5a.5.5 0 0 1 0 1h-5zM7 12.5a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7a.5.5 0 0 0-.5.5z"/>
+                            </svg>
+                            <span>Share</span>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const postCSS = `
+                /* Social Media Post Styles */
+                .social-post {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    padding: 1rem;
+                    max-width: 500px;
+                    margin: 0 auto;
+                }
+
+                .post-header {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 1rem;
+                }
+
+                .post-avatar {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: var(--secondary-color);
+                    margin-right: 0.75rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                }
+
+                .post-user {
+                    flex: 1;
+                }
+
+                .post-name {
+                    font-weight: 600;
+                    margin-bottom: 0.1rem;
+                }
+
+                .post-username {
+                    color: #666;
+                    font-size: 0.875rem;
+                }
+
+                .post-time {
+                    color: #999;
+                    font-size: 0.875rem;
+                }
+
+                .post-content {
+                    margin-bottom: 1rem;
+                }
+
+                .post-image {
+                    width: 100%;
+                    height: 200px;
+                    background: #f5f6fa;
+                    border-radius: 8px;
+                    margin-bottom: 1rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .post-actions {
+                    display: flex;
+                    justify-content: space-around;
+                    border-top: 1px solid #eee;
+                    padding-top: 0.75rem;
+                }
+
+                .post-action {
+                    display: flex;
+                    align-items: center;
+                    color: #666;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .post-action:hover {
+                    color: var(--primary-color);
+                }
+
+                .post-action svg {
+                    margin-right: 0.5rem;
+                }
+                `;
+                
+                const postJS = `
+                // Like button functionality
+                document.querySelectorAll('.post-action')[0].addEventListener('click', function() {
+                    const likeCount = this.querySelector('span');
+                    const currentCount = parseInt(likeCount.textContent.replace(/[^0-9]/g, ''));
+                    const svg = this.querySelector('svg');
+                    
+                    if (svg.style.fill === 'var(--primary-color)') {
+                        svg.style.fill = '';
+                        likeCount.textContent = (currentCount - 1) + (currentCount === 1201 ? '' : 'K');
+                    } else {
+                        svg.style.fill = 'var(--primary-color)';
+                        likeCount.textContent = (currentCount + 1) + (currentCount === 1199 ? 'K' : '');
+                        this.classList.add('pulse');
+                        setTimeout(() => this.classList.remove('pulse'), 500);
+                    }
+                });
+                `;
+                
+                updateCodeDisplay(postHTML, postCSS, postJS);
+            }
+
+            function generatePricingTable(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const darkMode = prompt.toLowerCase().includes('dark mode');
+                const hasToggle = prompt.toLowerCase().includes('toggle');
+                
+                let toggleHTML = '';
+                if (hasToggle) {
+                    toggleHTML = `
+                    <div class="toggle-container">
+                        <span>Monthly</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span>Annual (Save 20%)</span>
+                    </div>
+                    `;
+                }
+                
+                const pricingHTML = `
+                <div class="generated-content" style="${darkMode ? 'background: #2d3436; color: white;' : ''} --primary-color: ${colors.primary}">
+                    ${toggleHTML}
+                    <div class="pricing-table">
+                        <div class="pricing-plan">
+                            <div class="plan-name">Basic</div>
+                            <div class="plan-price">$9.99</div>
+                            <ul class="plan-features">
+                                <li class="plan-feature">10 Projects</li>
+                                <li class="plan-feature">5GB Storage</li>
+                                <li class="plan-feature">Basic Support</li>
+                                <li class="plan-feature">Email Reports</li>
+                            </ul>
+                            <a href="#" class="plan-button">Get Started</a>
+                        </div>
+                        
+                        <div class="pricing-plan recommended">
+                            <div class="recommended-badge">Recommended</div>
+                            <div class="plan-name">Professional</div>
+                            <div class="plan-price">$29.99</div>
+                            <ul class="plan-features">
+                                <li class="plan-feature">Unlimited Projects</li>
+                                <li class="plan-feature">50GB Storage</li>
+                                <li class="plan-feature">Priority Support</li>
+                                <li class="plan-feature">Advanced Analytics</li>
+                            </ul>
+                            <a href="#" class="plan-button">Get Started</a>
+                        </div>
+                        
+                        <div class="pricing-plan">
+                            <div class="plan-name">Enterprise</div>
+                            <div class="plan-price">$99.99</div>
+                            <ul class="plan-features">
+                                <li class="plan-feature">Unlimited Projects</li>
+                                <li class="plan-feature">1TB Storage</li>
+                                <li class="plan-feature">24/7 Support</li>
+                                <li class="plan-feature">Dedicated Account Manager</li>
+                            </ul>
+                            <a href="#" class="plan-button">Get Started</a>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const pricingCSS = `
+                /* Pricing Table Styles */
+                .pricing-table {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 1.5rem;
+                    max-width: 900px;
+                    margin: 0 auto;
+                }
+
+                .pricing-plan {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    padding: 2rem;
+                    text-align: center;
+                    transition: all 0.3s ease;
+                }
+
+                .pricing-plan.recommended {
+                    border: 2px solid var(--primary-color);
+                    position: relative;
+                    transform: translateY(-10px);
+                }
+
+                .recommended-badge {
+                    position: absolute;
+                    top: -12px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: var(--primary-color);
+                    color: white;
+                    padding: 0.25rem 1rem;
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: bold;
+                }
+
+                .plan-name {
+                    font-size: 1.25rem;
+                    font-weight: 600;
+                    margin-bottom: 1rem;
+                }
+
+                .plan-price {
+                    font-size: 2rem;
+                    font-weight: bold;
+                    margin-bottom: 1.5rem;
+                }
+
+                .plan-features {
+                    list-style: none;
+                    margin-bottom: 2rem;
+                }
+
+                .plan-feature {
+                    padding: 0.5rem 0;
+                    border-bottom: 1px solid #eee;
+                }
+
+                .plan-feature:last-child {
+                    border-bottom: none;
+                }
+
+                .plan-button {
+                    display: inline-block;
+                    width: 100%;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    background: var(--primary-color);
+                    color: white;
+                    text-decoration: none;
+                    font-weight: 600;
+                    transition: all 0.3s ease;
+                }
+
+                .plan-button:hover {
+                    background: ${darkenColor(colors.primary, 10)};
+                    transform: translateY(-2px);
+                }
+
+                .toggle-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin-bottom: 2rem;
+                    gap: 1rem;
+                }
+
+                .toggle-switch {
+                    position: relative;
+                    display: inline-block;
+                    width: 60px;
+                    height: 30px;
+                }
+
+                .toggle-switch input {
+                    opacity: 0;
+                    width: 0;
+                    height: 0;
+                }
+
+                .toggle-slider {
+                    position: absolute;
+                    cursor: pointer;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background-color: #ccc;
+                    transition: .4s;
+                    border-radius: 34px;
+                }
+
+                .toggle-slider:before {
+                    position: absolute;
+                    content: "";
+                    height: 22px;
+                    width: 22px;
+                    left: 4px;
+                    bottom: 4px;
+                    background-color: white;
+                    transition: .4s;
+                    border-radius: 50%;
+                }
+
+                input:checked + .toggle-slider {
+                    background-color: var(--primary-color);
+                }
+
+                input:checked + .toggle-slider:before {
+                    transform: translateX(30px);
+                }
+                `;
+                
+                const pricingJS = `
+                // Toggle switch functionality
+                if (document.querySelector('.toggle-switch input')) {
+                    document.querySelector('.toggle-switch input').addEventListener('change', function() {
+                        const basicPrice = document.querySelectorAll('.plan-price')[0];
+                        const proPrice = document.querySelectorAll('.plan-price')[1];
+                        const enterprisePrice = document.querySelectorAll('.plan-price')[2];
+                        
+                        if (this.checked) {
+                            // Annual pricing
+                            basicPrice.textContent = '$7.99';
+                            proPrice.textContent = '$24.99';
+                            enterprisePrice.textContent = '$79.99';
+                        } else {
+                            // Monthly pricing
+                            basicPrice.textContent = '$9.99';
+                            proPrice.textContent = '$29.99';
+                            enterprisePrice.textContent = '$99.99';
+                        }
+                    });
+                }
+
+                // Plan button click handlers
+                document.querySelectorAll('.plan-button').forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const planName = this.closest('.pricing-plan').querySelector('.plan-name').textContent;
+                        alert('Selected plan: ' + planName);
+                    });
+                });
+                `;
+                
+                updateCodeDisplay(pricingHTML, pricingCSS, pricingJS);
+            }
+
+            function generateEnhancedCard(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const title = extractFromPrompt(prompt, ['title', 'card title']) || 'Featured Content';
+                const content = extractFromPrompt(prompt, ['content', 'description']) || 'This is a beautifully designed card component generated from your prompt.';
+                
+                const cardHTML = `
+                <div class="generated-content" style="--primary-color: ${colors.primary}">
+                    <div class="product-card">
+                        <div class="product-image" style="background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary})">
+                            <svg width="80" height="80" viewBox="0 0 24 24" fill="white">
+                                <path d="M12 2L1 12h3v9h16v-9h3L12 2zm0 4.5l5.5 5.5H14v5h-4v-5H6.5L12 6.5z"/>
+                            </svg>
+                        </div>
+                        <div class="product-details">
+                            <h3 class="product-title">${title}</h3>
+                            <p style="margin-bottom: 1rem; color: #555;">${content}</p>
+                            <div class="product-actions">
+                                <button class="btn-primary">Learn More</button>
+                                <button class="btn-secondary">Save</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const cardCSS = `
+                /* Enhanced Card Styles */
+                .product-card {
+                    width: 300px;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    transition: all 0.3s ease;
+                    background: white;
+                    margin: 0 auto;
+                }
+
+                .product-card:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+                }
+
+                .product-image {
+                    width: 100%;
+                    height: 200px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    position: relative;
+                }
+
+                .product-details {
+                    padding: 1.5rem;
+                }
+
+                .product-title {
+                    font-size: 1.2rem;
+                    margin-bottom: 0.5rem;
+                }
+
+                .product-actions {
+                    display: flex;
+                    gap: 0.5rem;
+                }
+
+                .btn-primary {
+                    flex: 1;
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .btn-primary:hover {
+                    background: ${darkenColor(colors.primary, 10)};
+                }
+
+                .btn-secondary {
+                    background: transparent;
+                    border: 1px solid #ddd;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .btn-secondary:hover {
+                    border-color: var(--primary-color);
+                    color: var(--primary-color);
+                }
+                `;
+                
+                const cardJS = `
+                // Card button functionality
+                document.querySelector('.btn-primary').addEventListener('click', function() {
+                    alert('Learn more about: "${title}"');
+                });
+
+                document.querySelector('.btn-secondary').addEventListener('click', function() {
+                    this.textContent = 'Saved!';
+                    setTimeout(() => {
+                        this.textContent = 'Save';
+                    }, 2000);
+                });
+                `;
+                
+                updateCodeDisplay(cardHTML, cardCSS, cardJS);
+            }
+
+            function generateForm(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const darkMode = prompt.toLowerCase().includes('dark mode');
+                const isLogin = prompt.toLowerCase().includes('login');
+                const title = isLogin ? 'Login' : 'Contact Us';
+                
+                const formHTML = `
+                <div class="generated-content multi-step-form" style="${darkMode ? 'background: #2d3436; color: white;' : ''} --primary-color: ${colors.primary}">
+                    <h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.5rem;">${title}</h3>
+                    <div class="form-group">
+                        <label class="form-label">${isLogin ? 'Email' : 'Name'}</label>
+                        <input type="${isLogin ? 'email' : 'text'}" class="form-control" placeholder="${isLogin ? 'your@email.com' : 'Your Name'}">
+                    </div>
+                    ${isLogin ? `
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" class="form-control" placeholder="••••••••">
+                    </div>
+                    <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                        <label style="display: flex; align-items: center;">
+                            <input type="checkbox" style="margin-right: 0.5rem;"> Remember me
+                        </label>
+                        <a href="#" style="color: var(--primary-color); text-decoration: none;">Forgot password?</a>
+                    </div>
+                    ` : `
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-control" rows="4" placeholder="Your message"></textarea>
+                    </div>
+                    `}
+                    <button class="btn-primary" style="width: 100%; margin-top: 1rem;">${isLogin ? 'Login' : 'Send Message'}</button>
+                    ${isLogin ? `
+                    <div style="text-align: center; margin-top: 1rem;">
+                        Don't have an account? <a href="#" style="color: var(--primary-color); text-decoration: none;">Sign up</a>
+                    </div>
+                    ` : ''}
+                </div>
+                `;
+                
+                const formCSS = `
+                /* Form Styles */
+                .multi-step-form {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    padding: 2rem;
+                    max-width: 400px;
+                    margin: 0 auto;
+                }
+
+                .form-group {
+                    margin-bottom: 1.5rem;
+                }
+
+                .form-label {
+                    display: block;
+                    margin-bottom: 0.5rem;
+                    font-weight: 500;
+                }
+
+                .form-control {
+                    width: 100%;
+                    padding: 0.8rem;
+                    border: 1px solid #ddd;
+                    border-radius: 6px;
+                    font-size: 1rem;
+                    transition: all 0.3s ease;
+                }
+
+                .form-control:focus {
+                    outline: none;
+                    border-color: var(--primary-color);
+                    box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+                }
+
+                .btn-primary {
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    padding: 0.75rem;
+                    border-radius: 6px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    font-size: 1rem;
+                }
+
+                .btn-primary:hover {
+                    background: ${darkenColor(colors.primary, 10)};
+                }
+                `;
+                
+                const formJS = `
+                // Form submission
+                document.querySelector('.btn-primary').addEventListener('click', function() {
+                    const form = this.closest('.multi-step-form');
+                    const inputs = form.querySelectorAll('.form-control');
+                    let isValid = true;
+                    
+                    inputs.forEach(input => {
+                        if (!input.value) {
+                            input.style.borderColor = 'var(--danger-color)';
+                            isValid = false;
+                        } else {
+                            input.style.borderColor = '#ddd';
+                        }
+                    });
+                    
+                    if (isValid) {
+                        alert('${isLogin ? 'Login successful!' : 'Message sent successfully!'}');
+                        form.querySelectorAll('.form-control').forEach(input => input.value = '');
+                    } else {
+                        alert('Please fill in all required fields.');
+                    }
+                });
+                `;
+                
+                updateCodeDisplay(formHTML, formCSS, formJS);
+            }
+
+            // Additional generation functions for other component types
+            function generateKanbanBoard(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                
+                const kanbanHTML = `
+                <div class="generated-content" style="--primary-color: ${colors.primary}">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; max-width: 900px; margin: 0 auto;">
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">To Do</h4>
+                            <div style="background: white; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                                <div style="font-weight: 500; margin-bottom: 0.5rem;">Design new logo</div>
+                                <div style="font-size: 0.875rem; color: #666;">Due: Tomorrow</div>
+                            </div>
+                            <div style="background: white; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                                <div style="font-weight: 500; margin-bottom: 0.5rem;">Write blog post</div>
+                                <div style="font-size: 0.875rem; color: #666;">Due: Friday</div>
+                            </div>
+                            <div style="background: white; border-radius: 6px; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                                <div style="font-weight: 500; margin-bottom: 0.5rem;">Research competitors</div>
+                                <div style="font-size: 0.875rem; color: #666;">Due: Next week</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">In Progress</h4>
+                            <div style="background: white; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                                <div style="font-weight: 500; margin-bottom: 0.5rem;">Develop new feature</div>
+                                <div style="font-size: 0.875rem; color: #666;">Due: Tomorrow</div>
+                            </div>
+                            <div style="background: white; border-radius: 6px; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer;">
+                                <div style="font-weight: 500; margin-bottom: 0.5rem;">Fix login bug</div>
+                                <div style="font-size: 0.875rem; color: #666;">Due: Today</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 1rem;">
+                            <h4 style="margin-bottom: 1rem;">Done</h4>
+                            <div style="background: white; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; opacity: 0.7;">
+                                <div style="font-weight: 500; margin-bottom: 0.5rem;">Update documentation</div>
+                                <div style="font-size: 0.875rem; color: #666;">Completed: Yesterday</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const kanbanCSS = `
+                /* Kanban Board Styles */
+                .kanban-board {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 1rem;
+                    max-width: 900px;
+                    margin: 0 auto;
+                }
+
+                .kanban-column {
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 1rem;
+                }
+
+                .kanban-column-title {
+                    margin-bottom: 1rem;
+                }
+
+                .kanban-card {
+                    background: white;
+                    border-radius: 6px;
+                    padding: 1rem;
+                    margin-bottom: 1rem;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                }
+
+                .kanban-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                }
+
+                .kanban-card-title {
+                    font-weight: 500;
+                    margin-bottom: 0.5rem;
+                }
+
+                .kanban-card-due {
+                    font-size: 0.875rem;
+                    color: #666;
+                }
+
+                .kanban-card.done {
+                    opacity: 0.7;
+                }
+                `;
+                
+                const kanbanJS = `
+                // Kanban card drag and drop (simulated)
+                document.querySelectorAll('.kanban-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const currentColumn = this.parentElement;
+                        const columns = document.querySelectorAll('.kanban-column');
+                        let nextColumn;
+                        
+                        if (currentColumn === columns[0]) {
+                            nextColumn = columns[1];
+                        } else if (currentColumn === columns[1]) {
+                            nextColumn = columns[2];
+                        } else {
+                            return;
+                        }
+                        
+                        this.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            currentColumn.removeChild(this);
+                            nextColumn.appendChild(this);
+                            this.style.transform = '';
+                        }, 200);
+                    });
+                });
+                `;
+                
+                updateCodeDisplay(kanbanHTML, kanbanCSS, kanbanJS);
+            }
+
+            function generateWeatherWidget(prompt) {
+                const colors = extractColors(prompt) || { primary: '#3498db', secondary: '#a29bfe' };
+                const location = extractFromPrompt(prompt, ['location']) || 'New York';
+                const temp = prompt.toLowerCase().includes('cold') ? '42°F' : '78°F';
+                const condition = prompt.toLowerCase().includes('rain') ? 'Rainy' : 
+                                prompt.toLowerCase().includes('sunny') ? 'Sunny' : 'Partly Cloudy';
+                
+                const weatherHTML = `
+                <div class="generated-content" style="--primary-color: ${colors.primary}">
+                    <div style="background: white; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); padding: 1.5rem; max-width: 300px; margin: 0 auto; text-align: center;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                            <h3 style="font-size: 1.25rem;">${location}</h3>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="${condition === 'Rainy' ? '#3498db' : condition === 'Sunny' ? '#fdcb6e' : '#b2bec3'}">
+                                ${condition === 'Rainy' ? `
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/>
+                                ` : condition === 'Sunny' ? `
+                                <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8 5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm-9.95-4h2v2h-2v-2zm3.04-.39l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+                                ` : `
+                                <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                                `}
+                            </svg>
+                        </div>
+                        <div style="font-size: 3rem; font-weight: bold; margin-bottom: 0.5rem;">${temp}</div>
+                        <div style="color: #666; margin-bottom: 1.5rem;">${condition}</div>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                            <div>
+                                <div style="font-size: 0.875rem; color: #666;">Mon</div>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#b2bec3" style="margin: 0.5rem 0;">
+                                    <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM19 18H6c-2.21 0-4-1.79-4-4 0-2.05 1.53-3.76 3.56-3.97l1.07-.11.5-.95C8.08 7.14 9.94 6 12 6c2.62 0 4.88 1.86 5.39 4.43l.3 1.5 1.53.11c1.56.1 2.78 1.41 2.78 2.96 0 1.65-1.35 3-3 3z"/>
+                                </svg>
+                                <div style="font-size: 0.875rem;">68°</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.875rem; color: #666;">Tue</div>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#fdcb6e" style="margin: 0.5rem 0;">
+                                    <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79 1.42-1.41zM4 10.5H1v2h3v-2zm9-9.95h-2V3.5h2V.55zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41 1.79-1.79zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79-1.4 1.4zM20 10.5v2h3v-2h-3zm-8 5c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm-9.95-4h2v2h-2v-2zm3.04-.39l1.41 1.41 1.79-1.8-1.41-1.41-1.79 1.8z"/>
+                                </svg>
+                                <div style="font-size: 0.875rem;">72°</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.875rem; color: #666;">Wed</div>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="#3498db" style="margin: 0.5rem 0;">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"/>
+                                </svg>
+                                <div style="font-size: 0.875rem;">65°</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const weatherCSS = `
+                /* Weather Widget Styles */
+                .weather-widget {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    padding: 1.5rem;
+                    max-width: 300px;
+                    margin: 0 auto;
+                    text-align: center;
+                }
+
+                .weather-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 1rem;
+                }
+
+                .weather-location {
+                    font-size: 1.25rem;
+                }
+
+                .weather-temp {
+                    font-size: 3rem;
+                    font-weight: bold;
+                    margin-bottom: 0.5rem;
+                }
+
+                .weather-condition {
+                    color: #666;
+                    margin-bottom: 1.5rem;
+                }
+
+                .weather-forecast {
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 1rem;
+                }
+
+                .forecast-day {
+                    font-size: 0.875rem;
+                    color: #666;
+                }
+
+                .forecast-temp {
+                    font-size: 0.875rem;
+                }
+                `;
+                
+                const weatherJS = `
+                // Weather widget interaction
+                document.querySelector('.weather-widget').addEventListener('click', function() {
+                    alert('Fetching latest weather data for ${location}...');
+                    // In a real app, this would refresh the weather data
+                });
+                `;
+                
+                updateCodeDisplay(weatherHTML, weatherCSS, weatherJS);
+            }
+
+            function generateChatInterface(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const darkMode = prompt.toLowerCase().includes('dark mode');
+                
+                const chatHTML = `
+                <div class="generated-content" style="${darkMode ? 'background: #2d3436; color: white;' : ''} --primary-color: ${colors.primary}">
+                    <div style="display: flex; height: 400px; max-width: 800px; margin: 0 auto; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                        <div style="width: 250px; background: ${darkMode ? '#3a4046' : '#f8f9fa'}; border-right: 1px solid ${darkMode ? '#444' : '#eee'}; padding: 1rem; overflow-y: auto;">
+                            <div style="display: flex; align-items: center; margin-bottom: 1.5rem;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 0.75rem;">Y</div>
+                                <div>
+                                    <div style="font-weight: 600;">Your Account</div>
+                                    <div style="font-size: 0.875rem; color: ${darkMode ? '#bbb' : '#666'};">Online</div>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1rem; font-size: 0.875rem; color: ${darkMode ? '#bbb' : '#666'}; text-transform: uppercase;">Recent Chats</div>
+                            
+                            <div style="display: flex; align-items: center; padding: 0.75rem; border-radius: 8px; background: ${darkMode ? '#444' : '#e9ecef'}; margin-bottom: 0.5rem; cursor: pointer;">
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: ${colors.secondary}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 0.75rem;">A</div>
+                                <div>
+                                    <div style="font-weight: 500;">AI Assistant</div>
+                                    <div style="font-size: 0.75rem; color: ${darkMode ? '#bbb' : '#666'};">Just now: How can I help?</div>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; align-items: center; padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; cursor: pointer;">
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: #fdcb6e; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 0.75rem;">J</div>
+                                <div>
+                                    <div style="font-weight: 500;">John Doe</div>
+                                    <div style="font-size: 0.75rem; color: ${darkMode ? '#bbb' : '#666'};">Yesterday: About the project</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="flex: 1; display: flex; flex-direction: column; background: ${darkMode ? '#2d3436' : 'white'}">
+                            <div style="padding: 1rem; border-bottom: 1px solid ${darkMode ? '#444' : '#eee'}; display: flex; align-items: center;">
+                                <div style="width: 36px; height: 36px; border-radius: 50%; background: ${colors.secondary}; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 0.75rem;">A</div>
+                                <div style="font-weight: 600;">AI Assistant</div>
+                            </div>
+                            
+                            <div style="flex: 1; padding: 1rem; overflow-y: auto;">
+                                <div style="display: flex; margin-bottom: 1rem; justify-content: flex-start;">
+                                    <div style="max-width: 70%; background: ${darkMode ? '#3a4046' : '#f8f9fa'}; padding: 0.75rem 1rem; border-radius: 12px; border-top-left-radius: 4px;">
+                                        Hello! How can I help you today?
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; margin-bottom: 1rem; justify-content: flex-end;">
+                                    <div style="max-width: 70%; background: var(--primary-color); color: white; padding: 0.75rem 1rem; border-radius: 12px; border-top-right-radius: 4px;">
+                                        ${prompt.length > 50 ? prompt.substring(0, 50) + '...' : prompt}
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; margin-bottom: 1rem; justify-content: flex-start;">
+                                    <div style="max-width: 70%; background: ${darkMode ? '#3a4046' : '#f8f9fa'}; padding: 0.75rem 1rem; border-radius: 12px; border-top-left-radius: 4px;">
+                                        I've generated a UI component based on your request. Let me know if you'd like any changes!
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div style="padding: 1rem; border-top: 1px solid ${darkMode ? '#444' : '#eee'};">
+                                <div style="display: flex; align-items: center;">
+                                    <input type="text" placeholder="Type a message..." style="flex: 1; padding: 0.75rem 1rem; border: 1px solid ${darkMode ? '#444' : '#ddd'}; border-radius: 24px; background: ${darkMode ? '#3a4046' : '#f8f9fa'}; color: ${darkMode ? 'white' : 'inherit'}; outline: none;">
+                                    <button style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); color: white; border: none; margin-left: 0.5rem; cursor: pointer;">
+                                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const chatCSS = `
+                /* Chat Interface Styles */
+                .chat-container {
+                    display: flex;
+                    height: 400px;
+                    max-width: 800px;
+                    margin: 0 auto;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                }
+
+                .chat-sidebar {
+                    width: 250px;
+                    background: #f8f9fa;
+                    border-right: 1px solid #eee;
+                    padding: 1rem;
+                    overflow-y: auto;
+                }
+
+                .user-profile {
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 1.5rem;
+                }
+
+                .user-avatar {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: var(--primary-color);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    margin-right: 0.75rem;
+                }
+
+                .user-info {
+                    font-weight: 600;
+                }
+
+                .user-status {
+                    font-size: 0.875rem;
+                    color: #666;
+                }
+
+                .chat-list-header {
+                    margin-bottom: 1rem;
+                    font-size: 0.875rem;
+                    color: #666;
+                    text-transform: uppercase;
+                }
+
+                .chat-item {
+                    display: flex;
+                    align-items: center;
+                    padding: 0.75rem;
+                    border-radius: 8px;
+                    margin-bottom: 0.5rem;
+                    cursor: pointer;
+                }
+
+                .chat-item.active {
+                    background: #e9ecef;
+                }
+
+                .chat-avatar {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 50%;
+                    background: var(--secondary-color);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-weight: bold;
+                    margin-right: 0.75rem;
+                }
+
+                .chat-name {
+                    font-weight: 500;
+                }
+
+                .chat-preview {
+                    font-size: 0.75rem;
+                    color: #666;
+                }
+
+                .chat-main {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    background: white;
+                }
+
+                .chat-header {
+                    padding: 1rem;
+                    border-bottom: 1px solid #eee;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .chat-messages {
+                    flex: 1;
+                    padding: 1rem;
+                    overflow-y: auto;
+                }
+
+                .message {
+                    display: flex;
+                    margin-bottom: 1rem;
+                }
+
+                .message-incoming {
+                    justify-content: flex-start;
+                }
+
+                .message-outgoing {
+                    justify-content: flex-end;
+                }
+
+                .message-bubble {
+                    max-width: 70%;
+                    padding: 0.75rem 1rem;
+                    border-radius: 12px;
+                }
+
+                .message-incoming .message-bubble {
+                    background: #f8f9fa;
+                    border-top-left-radius: 4px;
+                }
+
+                .message-outgoing .message-bubble {
+                    background: var(--primary-color);
+                    color: white;
+                    border-top-right-radius: 4px;
+                }
+
+                .chat-input {
+                    padding: 1rem;
+                    border-top: 1px solid #eee;
+                }
+
+                .input-container {
+                    display: flex;
+                    align-items: center;
+                }
+
+                .message-input {
+                    flex: 1;
+                    padding: 0.75rem 1rem;
+                    border: 1px solid #ddd;
+                    border-radius: 24px;
+                    background: #f8f9fa;
+                    outline: none;
+                }
+
+                .send-button {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 50%;
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    margin-left: 0.5rem;
+                    cursor: pointer;
+                }
+                `;
+                
+                const chatJS = `
+                // Chat functionality
+                document.querySelector('.send-button').addEventListener('click', function() {
+                    const input = document.querySelector('.message-input');
+                    if (input.value.trim()) {
+                        const messagesContainer = document.querySelector('.chat-messages');
+                        
+                        // Create outgoing message
+                        const outgoingMessage = document.createElement('div');
+                        outgoingMessage.className = 'message message-outgoing';
+                        outgoingMessage.innerHTML = \`
+                            <div class="message-bubble">\${input.value}</div>
+                        \`;
+                        messagesContainer.appendChild(outgoingMessage);
+                        
+                        // Clear input
+                        input.value = '';
+                        
+                        // Simulate response
+                        setTimeout(() => {
+                            const incomingMessage = document.createElement('div');
+                            incomingMessage.className = 'message message-incoming';
+                            incomingMessage.innerHTML = \`
+                                <div class="message-bubble">Thanks for your message! How can I assist you further?</div>
+                            \`;
+                            messagesContainer.appendChild(incomingMessage);
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        }, 1000);
+                        
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    }
+                });
+
+                // Also send on Enter key
+                document.querySelector('.message-input').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        document.querySelector('.send-button').click();
+                    }
+                });
+                `;
+                
+                updateCodeDisplay(chatHTML, chatCSS, chatJS);
+            }
+
+            function generateMusicPlayer(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const darkMode = prompt.toLowerCase().includes('dark mode');
+                const song = extractFromPrompt(prompt, ['song']) || 'Favorite Song';
+                const artist = extractFromPrompt(prompt, ['artist']) || 'Popular Artist';
+                
+                const playerHTML = `
+                <div class="generated-content" style="${darkMode ? 'background: #2d3436; color: white;' : ''} --primary-color: ${colors.primary}">
+                    <div style="background: ${darkMode ? '#3a4046' : 'white'}; border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); padding: 1.5rem; max-width: 300px; margin: 0 auto;">
+                        <div style="text-align: center; margin-bottom: 1.5rem;">
+                            <div style="width: 200px; height: 200px; border-radius: 12px; background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary}); margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; animation: rotate 20s linear infinite; animation-play-state: paused;">
+                                <svg width="80" height="80" viewBox="0 0 24 24" fill="white">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                                </svg>
+                            </div>
+                            <div style="font-weight: 600; font-size: 1.25rem; margin-bottom: 0.25rem;">${song}</div>
+                            <div style="color: ${darkMode ? '#bbb' : '#666'};">${artist}</div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: ${darkMode ? '#bbb' : '#666'}; margin-bottom: 0.5rem;">
+                                <span>1:23</span>
+                                <span>3:45</span>
+                            </div>
+                            <div style="height: 4px; background: ${darkMode ? '#444' : '#eee'}; border-radius: 2px; margin-bottom: 0.5rem;">
+                                <div style="width: 40%; height: 100%; background: var(--primary-color); border-radius: 2px;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button style="background: none; border: none; color: ${darkMode ? 'white' : 'var(--primary-color)'}; cursor: pointer;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M15 6v12l-8.5-6z"/>
+                                </svg>
+                            </button>
+                            <button style="background: none; border: none; color: ${darkMode ? 'white' : 'var(--primary-color)'}; cursor: pointer;">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                                </svg>
+                            </button>
+                            <button style="background: none; border: none; color: ${darkMode ? 'white' : 'var(--primary-color)'}; cursor: pointer;">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M9 18l8.5-6L9 6v12z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const playerCSS = `
+                /* Music Player Styles */
+                .music-player {
+                    background: white;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                    padding: 1.5rem;
+                    max-width: 300px;
+                    margin: 0 auto;
+                }
+
+                .album-art {
+                    width: 200px;
+                    height: 200px;
+                    border-radius: 12px;
+                    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                    margin: 0 auto 1rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .song-info {
+                    text-align: center;
+                    margin-bottom: 1.5rem;
+                }
+
+                .song-title {
+                    font-weight: 600;
+                    font-size: 1.25rem;
+                    margin-bottom: 0.25rem;
+                }
+
+                .song-artist {
+                    color: #666;
+                }
+
+                .progress-container {
+                    margin-bottom: 1.5rem;
+                }
+
+                .time-display {
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 0.75rem;
+                    color: #666;
+                    margin-bottom: 0.5rem;
+                }
+
+                .progress-bar {
+                    height: 4px;
+                    background: #eee;
+                    border-radius: 2px;
+                    margin-bottom: 0.5rem;
+                }
+
+                .progress {
+                    width: 40%;
+                    height: 100%;
+                    background: var(--primary-color);
+                    border-radius: 2px;
+                }
+
+                .controls {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+
+                .control-button {
+                    background: none;
+                    border: none;
+                    color: var(--primary-color);
+                    cursor: pointer;
+                }
+
+                @keyframes rotate {
+                    from { transform: rotate(0deg); }
+                    to { transform: rotate(360deg); }
+                }
+                `;
+                
+                const playerJS = `
+                // Music player functionality
+                const albumArt = document.querySelector('.album-art');
+                const playPauseButton = document.querySelectorAll('.control-button')[1];
+                let isPlaying = false;
+
+                playPauseButton.addEventListener('click', function() {
+                    isPlaying = !isPlaying;
+                    
+                    if (isPlaying) {
+                        albumArt.style.animationPlayState = 'running';
+                        this.innerHTML = \`
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
+                            </svg>
+                        \`;
+                    } else {
+                        albumArt.style.animationPlayState = 'paused';
+                        this.innerHTML = \`
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                            </svg>
+                        \`;
+                    }
+                });
+
+                // Progress bar click handler
+                document.querySelector('.progress-bar').addEventListener('click', function(e) {
+                    const percent = e.offsetX / this.offsetWidth;
+                    document.querySelector('.progress').style.width = (percent * 100) + '%';
+                    
+                    // Update time display (simulated)
+                    const minutes = Math.floor(percent * 3);
+                    const seconds = Math.floor(percent * 45);
+                    document.querySelectorAll('.time-display span')[0].textContent = \`\${minutes}:\${seconds < 10 ? '0' : ''}\${seconds}\`;
+                });
+                `;
+                
+                updateCodeDisplay(playerHTML, playerCSS, playerJS);
+            }
+
+            function generate3DFlipCard(prompt) {
+                const colors = extractColors(prompt) || { primary: '#6c5ce7', secondary: '#a29bfe' };
+                const title = extractFromPrompt(prompt, ['title', 'card title']) || 'Interactive Card';
+                const frontContent = extractFromPrompt(prompt, ['front content', 'front text']) || 'Hover over me to see the back side!';
+                const backContent = extractFromPrompt(prompt, ['back content', 'back text']) || 'This is the back side with additional details.';
+                
+                const flipCardHTML = `
+                <div class="generated-content" style="--primary-color: ${colors.primary}">
+                    <div style="perspective: 1000px; width: 300px; height: 200px; margin: 0 auto;">
+                        <div class="flip-card-inner" style="position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.6s; transform-style: preserve-3d;">
+                            <div class="flip-card-front" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: linear-gradient(135deg, ${colors.primary}, ${colors.secondary}); color: white; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.1);">
+                                <h3 style="margin-bottom: 1rem;">${title}</h3>
+                                <p>${frontContent}</p>
+                            </div>
+                            <div class="flip-card-back" style="position: absolute; width: 100%; height: 100%; backface-visibility: hidden; background: white; color: #333; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.5rem; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transform: rotateY(180deg);">
+                                <h3 style="margin-bottom: 1rem; color: var(--primary-color);">Details</h3>
+                                <p>${backContent}</p>
+                                <button style="margin-top: 1rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer;">Learn More</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                const flipCardCSS = `
+                /* 3D Flip Card Styles */
+                .flip-container {
+                    perspective: 1000px;
+                    width: 300px;
+                    height: 200px;
+                    margin: 0 auto;
+                }
+
+                .flip-card-inner {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                    text-align: center;
+                    transition: transform 0.6s;
+                    transform-style: preserve-3d;
+                }
+
+                .flip-container:hover .flip-card-inner {
+                    transform: rotateY(180deg);
+                }
+
+                .flip-card-front, .flip-card-back {
+                    position: absolute;
+                    width: 100%;
+                    height: 100%;
+                    backface-visibility: hidden;
+                    border-radius: 12px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 1.5rem;
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                }
+
+                .flip-card-front {
+                    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+                    color: white;
+                }
+
+                .flip-card-back {
+                    background: white;
+                    color: #333;
+                    transform: rotateY(180deg);
+                }
+
+                .flip-card-back h3 {
+                    color: var(--primary-color);
+                    margin-bottom: 1rem;
+                }
+
+                .flip-button {
+                    margin-top: 1rem;
+                    padding: 0.5rem 1rem;
+                    background: var(--primary-color);
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    cursor: pointer;
+                }
+                `;
+                
+                const flipCardJS = `
+                // Flip card on click (alternative to hover)
+                document.querySelector('.flip-card-inner').addEventListener('click', function() {
+                    this.style.transform = this.style.transform === 'rotateY(180deg)' ? '' : 'rotateY(180deg)';
+                });
+
+                // Learn more button
+                document.querySelector('.flip-button').addEventListener('click', function() {
+                    alert('Showing more details about this card!');
+                });
+                `;
+                
+                updateCodeDisplay(flipCardHTML, flipCardCSS, flipCardJS);
+            }
+
+            function updateCodeDisplay(html, css, js) {
+                // Update HTML code
+                htmlCode.querySelector('code').innerText = formatCode(html);
+                
+                // Update CSS code if enabled
+                if (includeCss.checked) {
+                    cssCode.querySelector('code').innerText = formatCode(css);
+                } else {
+                    cssCode.querySelector('code').innerText = '/* CSS generation was disabled in settings */';
+                }
+                
+                // Update JS code if enabled
+                if (includeJs.checked) {
+                    jsCode.querySelector('code').innerText = formatCode(js);
+                } else {
+                    jsCode.querySelector('code').innerText = '// JavaScript generation was disabled in settings';
+                }
+                
+                // Inject the generated CSS into the page for the preview
+                const styleElement = document.createElement('style');
+                styleElement.id = 'generated-style';
+                styleElement.textContent = css;
+                
+                // Remove previous style if it exists
+                const oldStyle = document.getElementById('generated-style');
+                if (oldStyle) {
+                    oldStyle.remove();
+                }
+                
+                document.head.appendChild(styleElement);
+                
+                // Inject the generated JS into the page for the preview
+                const scriptElement = document.createElement('script');
+                scriptElement.id = 'generated-script';
+                scriptElement.textContent = js;
+                
+                // Remove previous script if it exists
+                const oldScript = document.getElementById('generated-script');
+                if (oldScript) {
+                    oldScript.remove();
+                }
+                
+                document.body.appendChild(scriptElement);
+                
+                // Update the preview
+                previewContainer.innerHTML = html;
+            }
+
+            // Helper functions
+            function extractFromPrompt(prompt, keywords) {
+                for (const keyword of keywords) {
+                    const regex = new RegExp(`${keyword}[\\s:]+["']?(.+?)(["']|$|\\s)`, 'i');
+                    const match = prompt.match(regex);
+                    if (match && match[1]) {
+                        return match[1];
+                    }
+                }
+                return null;
+            }
+
+            function extractPercentage(prompt) {
+                const match = prompt.match(/(\d+)%/);
+                return match ? match[0] : null;
+            }
+
+            function extractRating(prompt) {
+                const match = prompt.match(/(\d+(\.\d+)?)\s*(stars|rating)/i);
+                return match ? parseFloat(match[1]) : null;
+            }
+
+            function extractPrice(prompt) {
+                const currentMatch = prompt.match(/\$(\d+(\.\d+)?)/g);
+                if (currentMatch && currentMatch.length >= 2) {
+                    return {
+                        current: parseFloat(currentMatch[0].replace('$', '')),
+                        original: parseFloat(currentMatch[1].replace('$', ''))
+                    };
+                }
+                return null;
+            }
+
+            function extractComparison(prompt) {
+                const match = prompt.match(/[+-]\d+(\.\d+)?%/);
+                return match ? match[0] : null;
+            }
+
+            function extractColors(prompt) {
+                const colors = {};
+                if (prompt.includes('teal')) colors.primary = '#00b894';
+                if (prompt.includes('coral')) colors.secondary = '#ff7f50';
+                if (prompt.includes('purple')) colors.primary = '#6c5ce7';
+                if (prompt.includes('blue')) colors.primary = '#3498db';
+                if (prompt.includes('red')) colors.primary = '#e74c3c';
+                if (prompt.includes('green')) colors.primary = '#2ecc71';
+                if (prompt.includes('orange')) colors.primary = '#e67e22';
+                return Object.keys(colors).length ? colors : null;
+            }
+
+            function generateStars(rating) {
+                const fullStars = Math.floor(rating);
+                const halfStar = rating % 1 >= 0.5 ? 1 : 0;
+                const emptyStars = 5 - fullStars - halfStar;
+                
+                return '★'.repeat(fullStars) + 
+                       (halfStar ? '½' : '') + 
+                       '☆'.repeat(emptyStars);
+            }
+
+            function darkenColor(color, percent) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) - amt;
+                const G = (num >> 8 & 0x00FF) - amt;
+                const B = (num & 0x0000FF) - amt;
+                
+                return '#' + (
+                    0x1000000 +
+                    (R > 0 ? R < 255 ? R : 255 : 0) * 0x10000 +
+                    (G > 0 ? G < 255 ? G : 255 : 0) * 0x100 +
+                    (B > 0 ? B < 255 ? B : 255 : 0)
+                ).toString(16).slice(1);
+            }
+
+            function lightenColor(color, percent) {
+                const num = parseInt(color.replace('#', ''), 16);
+                const amt = Math.round(2.55 * percent);
+                const R = (num >> 16) + amt;
+                const G = (num >> 8 & 0x00FF) + amt;
+                const B = (num & 0x0000FF) + amt;
+                
+                return '#' + (
+                    0x1000000 +
+                    (R < 255 ? R > 0 ? R : 0 : 255) * 0x10000 +
+                    (G < 255 ? G > 0 ? G : 0 : 255) * 0x100 +
+                    (B < 255 ? B > 0 ? B : 0 : 255)
+                ).toString(16).slice(1);
+            }
+
+            function formatCode(code) {
+                // Simple code formatting - in a real app you'd use a proper formatter
+                return code
+                    .replace(/\n\s+/g, '\n') // Remove extra indentation
+                    .replace(/\n\n+/g, '\n\n') // Remove extra newlines
+                    .trim();
+            }
+        });
+    </script>
+</body>
+</html>
